@@ -12,13 +12,10 @@ import skypro.learn.tg_botfromvideo.service.TelegramBot;
 @Slf4j
 @Component
 public class BotInitializer {
-
    final TelegramBot bot;
-
     public BotInitializer(TelegramBot bot) {
         this.bot = bot;
     }
-
     @EventListener({ContextRefreshedEvent.class})
     public void init() throws TelegramApiException {
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);

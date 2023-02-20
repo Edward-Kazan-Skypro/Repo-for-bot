@@ -9,5 +9,4 @@ public class BotFromVideoApplication {
     public static void main(String[] args) {
         SpringApplication.run(BotFromVideoApplication.class, args);
     }
-
 }
