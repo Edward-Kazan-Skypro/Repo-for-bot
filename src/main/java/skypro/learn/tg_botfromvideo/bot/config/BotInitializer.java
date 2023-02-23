@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
-import skypro.learn.tg_botfromvideo.bot.service.TelegramBot;
+import skypro.learn.tg_botfromvideo.bot.TelegramBot;
 
 @Slf4j
 @Component
@@ -16,6 +16,11 @@ public class BotInitializer {
     public BotInitializer(TelegramBot bot) {
         this.bot = bot;
     }
+
+    /**
+     * Метод для инициализации телеграмм-бота
+     * @throws TelegramApiException
+     */
     @EventListener({ContextRefreshedEvent.class})
     public void init() throws TelegramApiException {
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);

@@ -6,13 +6,29 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class AdoptAnimalCommand {
-    private final String ADOPT_ANIMAL_TXT = "Приветствую!\n" +
-            "Здесь Вы можете узнать как взять питомца из приюта.\n\n" +
-            "Выберите один из вариантов запроса:\n\n" +
-            "/recommendations_for_keeping - рекомендации по содержанию\n\n" +
-            "/adopting_steps - как взять собаку из приюта (по шагам)\n\n" +
-            "/view_pets - посмотреть наших питомцев\n\n" +
-            "/register_user - зарегистрироваться\n\n" +
-            "/volunteer - пообщаться с волонтером\n\n" +
-            "/help - просмотр краткой справки по боту";
+    private final String ADOPT_ANIMAL_MENU_TXT = """
+            Приветствую!
+            Здесь Вы можете узнать как взять питомца из приюта.
+
+            Выберите один из вариантов запроса:
+            
+            /meeting_with_pet - знакомство с питомцем в приюте
+            
+            /documents_for_adopting - список документов, для оформления питомца
+            
+            /recommendations_for_transporting - рекомендации по перевозке питомца
+            
+            /improvement_home_for_puppy - список рекомендаций по обустройству дома для щенка
+            
+            /improvement_home_for_adult_dog - список рекомендаций по обустройству дома для взрослой собаки
+            
+            /improvement_home_for_disabled_dog - список рекомендаций по обустройству дома для собаки с ограниченными возможностями (зрение, передвижение)
+
+            /initial_appeal_with_dog - советы кинолога по первичному обращению с собакой
+            
+            /contacts_of_cynologists - контакты опытных кинологов
+            
+            /reasons_for_rejection - список причин, почему могут отказать и не дать разрешение на оформление питомца
+
+            /volunteer - пообщаться с волонтером если есть еще вопросы""";
 }
