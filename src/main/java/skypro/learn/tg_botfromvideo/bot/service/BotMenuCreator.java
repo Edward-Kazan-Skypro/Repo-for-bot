@@ -1,4 +1,4 @@
-package skypro.learn.tg_botfromvideo.bot.menu;
+package skypro.learn.tg_botfromvideo.bot.service;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,11 +15,15 @@ import java.util.List;
 public class BotMenuCreator  {
 
     private static List<BotCommand> listOfCommands = new ArrayList<>();
+
+    /**
+     * Метод добавляет пункты в Меню телеграмм-бота
+     * @return список (List) команд
+     */
     public static List<BotCommand> addCommandsToBotMenu (){
-        listOfCommands.add(new BotCommand("/about_shelter", "приветствие пользователя"));
+        listOfCommands.add(new BotCommand("/about_shelter", "информация о приюте"));
         listOfCommands.add(new BotCommand("/adopt_animal", "как взять собаку из приюта"));
-        //listOfCommands.add(new BotCommand("/send_report", "прислать отчет о содержании питомца"));
-        listOfCommands.add(new BotCommand("/volunteer", "пообщаться с волонтером"));
+        listOfCommands.add(new BotCommand("/send_report", "прислать отчет о содержании питомца"));
         listOfCommands.add(new BotCommand("/help", "просмотр краткой справки по боту"));
         return listOfCommands;
     }

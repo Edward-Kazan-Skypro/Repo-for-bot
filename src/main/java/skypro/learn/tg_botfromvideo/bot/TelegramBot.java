@@ -1,4 +1,4 @@
-package skypro.learn.tg_botfromvideo.bot.service;
+package skypro.learn.tg_botfromvideo.bot;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -8,9 +8,9 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import skypro.learn.tg_botfromvideo.bot.commands.CommandSelector;
+import skypro.learn.tg_botfromvideo.bot.service.CommandSelector;
 import skypro.learn.tg_botfromvideo.bot.config.BotConfig;
-import skypro.learn.tg_botfromvideo.bot.menu.BotMenuCreator;
+import skypro.learn.tg_botfromvideo.bot.service.BotMenuCreator;
 import skypro.learn.tg_botfromvideo.repository.UserRepository;
 
 
