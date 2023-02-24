@@ -11,7 +11,8 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import skypro.learn.tg_botfromvideo.bot.service.CommandSelector;
 import skypro.learn.tg_botfromvideo.bot.config.BotConfig;
 import skypro.learn.tg_botfromvideo.bot.service.BotMenuCreator;
-import skypro.learn.tg_botfromvideo.repository.UserRepository;
+import skypro.learn.tg_botfromvideo.model.Visitor;
+import skypro.learn.tg_botfromvideo.repository.VisitorsRepository;
 
 
 @SuppressWarnings("deprecation")
@@ -19,12 +20,12 @@ import skypro.learn.tg_botfromvideo.repository.UserRepository;
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
     final BotConfig botConfig;
-    final UserRepository userRepository;
+    final VisitorsRepository visitorsRepository;
     final BotMenuCreator botMenuCreator;
 
-    public TelegramBot(BotConfig botConfig, UserRepository userRepository, BotMenuCreator botMenuCreator) {
+    public TelegramBot(BotConfig botConfig, VisitorsRepository visitorsRepository, BotMenuCreator botMenuCreator) {
         this.botConfig = botConfig;
-        this.userRepository = userRepository;
+        this.visitorsRepository = visitorsRepository;
         this.botMenuCreator = botMenuCreator;
         try {
             this.execute(new SetMyCommands(
@@ -35,13 +36,51 @@ public class TelegramBot extends TelegramLongPollingBot {
             log.error("Ошибка формирования МЕНЮ бота: " + e.getMessage());
         }
     }
+
     @Override
     public void onUpdateReceived(Update update) {
-        sendMessage(update.getMessage().getChatId(), new CommandSelector().selectBotCommand(update));
+        registerVisitor(update);
+        var chatId = update.getMessage().getChatId();
+        Visitor visitor = visitorsRepository.findById(chatId).get();
+        String inputText = update.getMessage().getText();
+        //Если посетитель закончил общение в каком-то разделе меню,
+        //то это меню и будет отображено ботом
+        //Закомментировал - пока не работает корректный выбор меню:
+        //если получать последний сохраненный раздел меню, то на новые варианты меню не реагирует
+        //if (visitor.getLastCommand() != null){
+        //    inputText = visitor.getLastCommand();
+        //}
+        String outputText = new CommandSelector(visitorsRepository).selectBotCommand(inputText, visitor);
+        sendMessage(chatId, outputText);
     }
 
-    //Общий приватный метод, который получает id пользователя и текст (который мы отправляем пользователю)
-    //Этот метод используется при отправке всех сообщений в боте
+    /**
+     * Метод для авто-регистрации посетителей чата.
+     * Сохраняется chatId и имя посетителя.
+     * @param update
+     */
+    private Visitor registerVisitor(Update update) {
+        Visitor visitor = new Visitor();
+        var chatId = update.getMessage().getChatId();
+        var name = update.getMessage().getChat().getFirstName();
+        visitor.setName(name);
+        visitor.setChatId(chatId);
+
+        if (!visitorsRepository.existsById(chatId)) {
+            visitorsRepository.save(visitor);
+            log.info("Посетитель " + name + " добавлен в БД посетителей");
+        } else {
+            log.info("Посетитель " + name + " уже записан в БД посетителей");
+        }
+        return visitor;
+    }
+
+    /**
+     * Метод для отправки сообщений.
+     * Метод принимает два аргумента - chatId (для идентификации собеседника) и textToSend (текст сообщения)
+     * @param chatId
+     * @param textToSend
+     */
     private void sendMessage(long chatId, String textToSend) {
         SendMessage message = new SendMessage();
         //Чтобы отправить сообщение, надо указать кому будем отправлять - а именно его chatId

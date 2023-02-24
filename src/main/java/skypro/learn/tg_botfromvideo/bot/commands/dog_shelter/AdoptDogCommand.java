@@ -1,11 +1,11 @@
-package skypro.learn.tg_botfromvideo.bot.commands;
+package skypro.learn.tg_botfromvideo.bot.commands.dog_shelter;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class AdoptAnimalCommand {
+public class AdoptDogCommand {
     private final String ADOPT_ANIMAL_MENU_TXT = """
             Приветствую!
             Здесь Вы можете узнать как взять питомца из приюта.

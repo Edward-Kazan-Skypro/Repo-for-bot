@@ -1,4 +1,4 @@
-package skypro.learn.tg_botfromvideo.bot.commands;
+package skypro.learn.tg_botfromvideo.bot.commands.common;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
