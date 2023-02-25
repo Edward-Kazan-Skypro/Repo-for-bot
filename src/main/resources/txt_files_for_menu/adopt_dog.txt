@@ -3,7 +3,7 @@
 
 /meeting_with_pet - знакомство с питомцем в приюте
 
-/documents_for_adopting_dog - список документов, для оформления питомца
+/documents_for_adopting_dog - список документов, для оформления собаки
 
 /recommendations_for_transporting - рекомендации по перевозке питомца
 
