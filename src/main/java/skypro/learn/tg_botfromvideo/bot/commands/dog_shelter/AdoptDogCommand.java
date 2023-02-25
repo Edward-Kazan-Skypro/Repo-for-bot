@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AdoptDogCommand {
     private final String ADOPT_ANIMAL_MENU_TXT = """
-            Приветствую!
             Здесь Вы можете узнать как взять питомца из приюта.
-
             Выберите один из вариантов запроса:
             
             /meeting_with_pet - знакомство с питомцем в приюте
@@ -30,5 +28,4 @@ public class AdoptDogCommand {
             
             /reasons_for_rejection - список причин, почему могут отказать и не дать разрешение на оформление питомца
 
-            /volunteer - пообщаться с волонтером если есть еще вопросы""";
-}
+            /volunteer - пообщаться с волонтером если есть еще вопросы""";}
