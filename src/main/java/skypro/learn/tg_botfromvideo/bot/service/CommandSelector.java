@@ -66,13 +66,22 @@ public class CommandSelector {
                 //Команды, которые отображаются после выбора /cat_shelter
                 case "/сat_shelter_address":
                 case "/adopt_cat":
+                    saveLastCommand(inputText, visitor);
+                    fileName = "/adopt_cat";
+                    return readTextFromFile(fileName);
                 case "/safety_measures_in_cat_shelter":
                 case "/register_user_for_adopt_cat":
                 case "/cats_volunteer":
 
                 //Команды, которые отображаются после выбора /adopt_cat
-
-
+                case "/meeting_with_cat":
+                case "/documents_for_adopting_cat":
+                case "/recommendations_for_transporting_cat":
+                case "/improvement_home_for_kitty":
+                case "/improvement_home_for_adult_cat":
+                case "/improvement_home_for_disabled_cat":
+                case "/reasons_for_rejection_cat":
+                //case "/cats_volunteer":
 
 
                 case "/send_report":
