@@ -1,9 +1,6 @@
 package skypro.learn.tg_botfromvideo.bot.service;
 
 import lombok.extern.slf4j.Slf4j;
-import skypro.learn.tg_botfromvideo.bot.commands.common.StartCommand;
-import skypro.learn.tg_botfromvideo.bot.commands.dog_shelter.AboutDogShelterCommand;
-import skypro.learn.tg_botfromvideo.bot.commands.dog_shelter.AdoptDogCommand;
 import skypro.learn.tg_botfromvideo.model.Visitor;
 import skypro.learn.tg_botfromvideo.repository.VisitorsRepository;
 import java.io.*;
@@ -12,6 +9,7 @@ import java.io.*;
 public class CommandSelector {
 
     private String pathToFiles = "src/main/resources/txt_files_for_menu";
+    private String fileName;
 
     final VisitorsRepository visitorsRepository;
 
@@ -31,25 +29,29 @@ public class CommandSelector {
             switch (inputText) {
                 case "/dog_shelter":
                     saveSelectedShelter(inputText, visitor);
-                    return "dog_shelter selected";
+                    fileName = "/dog_shelter";
+                    return readTextFromFile(fileName);
                 case "/cat_shelter":
                     saveSelectedShelter(inputText, visitor);
-                    return "cat_shelter selected";
+                    fileName = "/cat_shelter";
+                    return readTextFromFile(fileName);
 
-                //Команды для отображения информации по приюту для собак
+                // !!!! Надо создать файлы с такими же названиями и заполнить их содержанием !!!!
 
-                case "/about_dog_shelter":
-                    saveLastCommand(inputText, visitor);
-                    return new AboutDogShelterCommand().getABOUT_DOG_SHELTER_MENU_TXT();
-
+                //Команды, которые отображаются после выбора /dog_shelter
                 case "/dog_shelter_address":
-                case "/safety_measures":
-                case "/register_user":
-                case "/volunteer":
-
                 case "/adopt_dog":
-                    return new AdoptDogCommand().getADOPT_ANIMAL_MENU_TXT();
+                    //saveLastCommand(inputText, visitor) - запоминаем выбранный пункт меню
+                    //м.б. потом пойму как правильно это использовать
+                    saveLastCommand(inputText, visitor);
+                    fileName = "/adopt_dog";
+                    return readTextFromFile(fileName);
+                case "/safety_measures_in_dog_shelter":
+                case "/register_user_for_adopt_dog":
+                case "/dogs_volunteer":
 
+
+                //Команды, которые отображаются после выбора /adopt_dog
                 case "/meeting_with_dog":
                 case "/documents_for_adopting_dog":
                 case "/recommendations_for_transporting":
@@ -59,41 +61,47 @@ public class CommandSelector {
                 case "/initial_appeal_with_dog":
                 case "/contacts_of_cynologists":
                 case "/reasons_for_rejection":
+                //case"/dogs_volunteer":
 
-                //Команды для отображения информации по приюту для кошек
+                //Команды, которые отображаются после выбора /cat_shelter
+                case "/сat_shelter_address":
+                case "/adopt_cat":
+                case "/safety_measures_in_cat_shelter":
+                case "/register_user_for_adopt_cat":
+                case "/cats_volunteer":
+
+                //Команды, которые отображаются после выбора /adopt_cat
+
+
 
 
                 case "/send_report":
 
                 case "/help":
                     saveLastCommand(inputText, visitor);
-                    String fileName = "/help";
+                    fileName = "/help";
                     return readTextFromFile(fileName);
                 case "/start":
-                    String answer = "Здравствуйте " + visitor.getName() + "!\n\n " +
-                            "Перед Вами информационный бот, который поможет получить сведения:\n" +
-                            "- о выбранном приюте (для кошек или для собак)\n" +
-                            "- как взять питомца из приюта\n" +
-                            "- как отправить отчет о взятом из приюта питомце\n" +
-                            "- как позвать на помощь волонтера - если нужна дополнительная информация\n\n" +
-                            "Итак, начнем наше общение!\n\n";
-                    answer += new StartCommand().getSTART_COMMAND_TXT();
-
-                    return answer;
+                    String welcomeText = "Здравствуйте " + visitor.getName() + "!\n\n";
+                    fileName = "/start";
+                    return welcomeText + readTextFromFile(fileName);
                 default:
                     return "Обработка запроса еще не реализована!";
             }
     }
 
+    /**
+     * Метод для чтения текстовых данных из файла.
+     * @param fileName
+     * @return
+     */
     private String readTextFromFile(String fileName){
         StringBuilder content = new StringBuilder();
         String line;
-        String pathWithName = pathToFiles+fileName + ".txt";
+        String pathWithName = pathToFiles + fileName + ".txt";
         try(BufferedReader br = new BufferedReader(new FileReader(pathWithName)))
         {
-            while((line = br.readLine()) != null){
-                content.append(line);
-            }
+            while((line = br.readLine()) != null) content.append(line).append("\n");
         }
         catch(IOException e){
             log.error("Ошибка чтения файла! " + e.getMessage());
@@ -101,11 +109,21 @@ public class CommandSelector {
         return new String(content);
     }
 
+    /**
+     * Метод для сохранения в БД выбранной команды меню
+     * @param inputText
+     * @param visitor
+     */
     private void saveLastCommand(String inputText, Visitor visitor){
         visitor.setLastCommand(inputText);
         visitorsRepository.save(visitor);
     }
 
+    /**
+     * Метод для сохранения в БД выбранного типа приюта
+     * @param inputText
+     * @param visitor
+     */
     private void saveSelectedShelter(String inputText, Visitor visitor){
         visitor.setVisitedShelter(inputText);
         visitorsRepository.save(visitor);
