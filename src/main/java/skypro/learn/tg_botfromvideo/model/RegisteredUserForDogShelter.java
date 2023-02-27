@@ -13,7 +13,13 @@ public class RegisteredUserForDogShelter {
     @Id
     private Long chatId;
 
-    private String name;
+    private String nameInChat;
+
+    private String firstName;
+
+    private String lastName;
+
+    private String visitedShelter;
 
     private String phoneNumber;
 
