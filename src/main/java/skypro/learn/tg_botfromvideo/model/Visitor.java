@@ -15,7 +15,7 @@ public class Visitor {
     @Id
     private Long chatId;
 
-    private String name;
+    private String nameInChat;
 
     private String visitedShelter;
 
