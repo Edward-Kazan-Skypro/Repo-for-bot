@@ -12,7 +12,7 @@ import skypro.learn.tg_botfromvideo.bot.TelegramBot;
 @Slf4j
 @Component
 public class BotInitializer {
-   final TelegramBot bot;
+   final private TelegramBot bot;
     public BotInitializer(TelegramBot bot) {
         this.bot = bot;
     }

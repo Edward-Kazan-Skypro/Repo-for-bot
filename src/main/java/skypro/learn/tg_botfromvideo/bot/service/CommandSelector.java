@@ -1,23 +1,15 @@
 package skypro.learn.tg_botfromvideo.bot.service;
 
 import lombok.extern.slf4j.Slf4j;
-import skypro.learn.tg_botfromvideo.model.RegisteredUserForDogShelter;
-import skypro.learn.tg_botfromvideo.model.Visitor;
-import skypro.learn.tg_botfromvideo.repository.VisitorsRepository;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 
 @Slf4j
+@Component
 public class CommandSelector {
 
     private String pathToFiles = "src/main/resources/txt_files_for_menu";
-    private String fileName;
-
-    final VisitorsRepository visitorsRepository;
-
-    public CommandSelector(VisitorsRepository visitorsRepository) {
-        this.visitorsRepository = visitorsRepository;
-    }
 
     /**
      * Метод для обработки сообщения от пользователя телеграмм-бота.
@@ -27,9 +19,16 @@ public class CommandSelector {
      * @return
      */
 
-    public String selectBotCommand(String inputText, Visitor visitor) {
+    public String selectBotCommand(String inputText) {
+        //Отдельная обработка кодового слова для входа для администратора
+        if (inputText.equals("/кодовое_слово")){
+            return "Добро пожаловать, Администратор!";
+        }
+        //Обычная обработка команд
+        return readTextFromFile(inputText);
+    }
 
-        switch (inputText) {
+       /* switch (inputText) {
             case "/dog_shelter":
                 saveSelectedShelter(inputText, visitor);
                 fileName = "/dog_shelter";
@@ -64,6 +63,10 @@ public class CommandSelector {
                 return readTextFromFile(fileName);
 
             case "/dogs_volunteer":
+                fileName = "/dogs_volunteer";
+                return readTextFromFile(fileName);
+            case "/yes":
+
 
 
                 //Команды, которые отображаются после выбора /adopt_dog
@@ -112,7 +115,7 @@ public class CommandSelector {
             default:
                 return "Обработка запроса еще не реализована!";
         }
-    }
+    }*/
 
     /**
      * Метод для чтения текстовых данных из файла.
@@ -130,27 +133,5 @@ public class CommandSelector {
             log.error("Ошибка чтения файла! " + e.getMessage());
         }
         return new String(content);
-    }
-
-    /**
-     * Метод для сохранения в БД выбранной команды меню
-     *
-     * @param inputText
-     * @param visitor
-     */
-    private void saveLastCommand(String inputText, Visitor visitor) {
-        visitor.setLastCommand(inputText);
-        visitorsRepository.save(visitor);
-    }
-
-    /**
-     * Метод для сохранения в БД выбранного типа приюта
-     *
-     * @param inputText
-     * @param visitor
-     */
-    private void saveSelectedShelter(String inputText, Visitor visitor) {
-        visitor.setVisitedShelter(inputText);
-        visitorsRepository.save(visitor);
     }
 }

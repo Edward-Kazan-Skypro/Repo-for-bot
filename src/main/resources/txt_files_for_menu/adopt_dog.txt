@@ -5,7 +5,7 @@
 
 /documents_for_adopting_dog - список документов, для оформления собаки
 
-/recommendations_for_transporting - рекомендации по перевозке питомца
+/recommendations_for_transporting_dog - рекомендации по перевозке питомца
 
 /improvement_home_for_puppy - список рекомендаций по обустройству дома для щенка
 
