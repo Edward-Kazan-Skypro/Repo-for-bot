@@ -4,10 +4,10 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "userForTesting")
+@Entity(name = "users")
 @Data
 @NoArgsConstructor
-public class TestUserForMenu {
+public class User {
 
     @Id
     private Long chatId;
