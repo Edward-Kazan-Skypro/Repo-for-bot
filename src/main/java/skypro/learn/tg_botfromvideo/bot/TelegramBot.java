@@ -3,18 +3,26 @@ package skypro.learn.tg_botfromvideo.bot;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.File;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import skypro.learn.tg_botfromvideo.bot.service.CommandSelector;
+import skypro.learn.tg_botfromvideo.bot.config.BotInitializer;
+import skypro.learn.tg_botfromvideo.bot.service.*;
 import skypro.learn.tg_botfromvideo.bot.config.BotConfig;
-import skypro.learn.tg_botfromvideo.bot.service.BotMenuCreator;
-import skypro.learn.tg_botfromvideo.bot.service.QuestionsHandler;
-import skypro.learn.tg_botfromvideo.model.InnerStatusUser;
-import skypro.learn.tg_botfromvideo.model.TestUserForMenu;
-import skypro.learn.tg_botfromvideo.repository.TestUsersRepository;
+import skypro.learn.tg_botfromvideo.model.Report;
+import skypro.learn.tg_botfromvideo.repository.AdminRepository;
+import skypro.learn.tg_botfromvideo.repository.ReportsRepository;
+import skypro.learn.tg_botfromvideo.repository.UsersRepository;
+
+import java.util.Comparator;
+import java.util.List;
 
 
 @SuppressWarnings("deprecation")
@@ -23,23 +31,39 @@ import skypro.learn.tg_botfromvideo.repository.TestUsersRepository;
 public class TelegramBot extends TelegramLongPollingBot {
     final private BotConfig botConfig;
     final private BotMenuCreator botMenuCreator;
-    final private CommandSelector commandSelector;
-    final private TestUsersRepository testUsersRepository;
+    final private BotMenuSelector botMenuSelector;
+    final private CommandUtil commandUtil;
+    final private UserUtil userUtil;
+    final private ReportUtil reportUtil;
+    final private QuestionsUtil questionsUtil;
+    final private UsersRepository usersRepository;
+    final private AdminRepository adminRepository;
 
-    final private QuestionsHandler questionsHandler;
+    final private ReportsRepository reportsRepository;
 
     public TelegramBot(BotConfig botConfig,
                        BotMenuCreator botMenuCreator,
-                       CommandSelector commandSelector,
-                       TestUsersRepository testUsersRepository,
-                       QuestionsHandler questionsHandler) {
+                       BotMenuSelector botMenuSelector,
+                       CommandUtil commandUtil,
+                       UserUtil userUtil,
+                       ReportUtil reportUtil,
+                       QuestionsUtil questionsUtil,
+                       UsersRepository usersRepository,
+                       AdminRepository adminRepository,
+                       ReportsRepository reportsRepository) {
         this.botConfig = botConfig;
         this.botMenuCreator = botMenuCreator;
-        this.commandSelector = commandSelector;
-        this.testUsersRepository = testUsersRepository;
-        this.questionsHandler = questionsHandler;
+        this.botMenuSelector = botMenuSelector;
+        this.commandUtil = commandUtil;
+        this.userUtil = userUtil;
+        this.reportUtil = reportUtil;
+        this.questionsUtil = questionsUtil;
+        this.usersRepository = usersRepository;
+        this.adminRepository = adminRepository;
+        this.reportsRepository = reportsRepository;
+        //Здесь выбираем список команд для нового пользователя
         try {
-            this.execute(new SetMyCommands(
+            execute(new SetMyCommands(
                     botMenuCreator.addCommandsForNewUser(),
                     new BotCommandScopeDefault(),
                     null));
@@ -53,250 +77,143 @@ public class TelegramBot extends TelegramLongPollingBot {
         //Получаем chatId - уникальный идентификатор пользователя
         //т.е. узнаем кто нам написал
         Long chatId = update.getMessage().getChatId();
-        //Ищем в БД такого пользователя, и уже исходя из его статуса строится дальнейшее общение
-        //И обновляем Меню для пользователя, соответствующее его статусу
-        //Если пользователь уже есть в БД, то меняем ему отображаемое Меню
-        if (testUsersRepository.existsById(chatId)) {
-            selectMenuForUser(chatId);
-        }
-        //А если такого пользователя нет, то выводим приветствие и проводим первичную (скрытую) регистрацию
-        //Меню для такого пользователя меняем после
-        else {
+        boolean inputMessage = update.getMessage().hasDocument();
+        String checkInputText = update.getMessage().getText();
+        System.out.println("inputMessage " + inputMessage);
+
+        //В первую очередь обновим отображаемое Меню бота для пользователя
+        //Если пользователя с таким chatId нет, то сохраним его в БД
+        if (!usersRepository.existsById(chatId)) {
             String nameInChat = update.getMessage().getChat().getFirstName();
-            //String textToSend = "Здравствуйте " + nameInChat + "!\n\n" +
-                    //"Пожалуйста, выберите команду /start в Menu";
-            silentRegistration(chatId, nameInChat);
+            userUtil.silentRegistrationUser(chatId, nameInChat);
             log.info("Новый пользователь " + nameInChat + " зарегистрирован как посетитель");
-        }
-
-        //Так, меню для пользователя мы обновили.
-        //Теперь начнем обрабатывать поступающие сообщения
-        //Чаще всего будут поступать выбранные пользователем команды из Меню
-        //Значит их обработаем в первую очередь.
-        //Получаем текст, который ввел пользователь
-        String inputText = update.getMessage().getText();
-        //Если введенный текст начинается с "/", то сразу отправляем на обработку
-        if (inputText.startsWith("/")) {
-            String outputText = commandSelector.selectBotCommand(inputText);
-            sendMessage(chatId, outputText);
-        }
-        //Если текст начинается с "рег:", то значит поступили регистрационные данные
-        if (inputText.startsWith("рег:")) {
-            if (registerUser(update)) {
-                sendMessage(chatId, commandSelector.selectBotCommand("/registration_user_complete"));
-            } else {
-                sendMessage(chatId, commandSelector.selectBotCommand("/registration_user_error"));
-            }
-
-        }
-        //Если текст начинается с секретного кода ("/кодовое_слово"), то это заходит в чат волонтер
-        //И для него надо обновить волонтерское меню
-        if (inputText.startsWith("/кодовое_слово")) {
+        } else {
+            //Обновляем Меню для пользователя, соответствующее его статусу
             try {
-                execute(new SetMyCommands(
-                        botMenuCreator.addCommandsForVolunteer(),
-                        new BotCommandScopeDefault(),
-                        null));
+                execute(botMenuSelector.selectMenuForUser(chatId));
             } catch (TelegramApiException e) {
-                log.error("Ошибка формирования МЕНЮ бота: " + e.getMessage());
+                log.error("Ошибка формирования Пользовательского Меню бота: " + e.getMessage());
             }
         }
-        //Если пользователь выбирает приют для собак, то сохраняем в БД под его chatId этот выбор
-        if (inputText.equals("/dog_shelter")){
-            if (testUsersRepository.findById(chatId).isPresent()) {
-                TestUserForMenu user = testUsersRepository.findById(chatId).get();
-                user.setVisitedShelter("/dog_shelter");
-                testUsersRepository.save(user);
-                log.info("Пользователь выбрал dog_shelter");
-            }
-        }
-        //Если пользователь выбирает приют для кошек, то сохраняем в БД под его chatId этот выбор
-        if (inputText.equals("/cat_shelter")){
-            if (testUsersRepository.findById(chatId).isPresent()) {
-                TestUserForMenu user = testUsersRepository.findById(chatId).get();
-                user.setVisitedShelter("/cat_shelter");
-                testUsersRepository.save(user);
-                log.info("Пользователь выбрал cat_shelter");
+        //Если сообщение от админа, то выбираем его Меню
+        if (adminRepository.existsById(chatId)) {
+            try {
+                execute(botMenuSelector.selectMenuForAdmin(chatId));
+            } catch (TelegramApiException e) {
+                log.error("Ошибка формирования Административного меню бота: " + e.getMessage());
             }
         }
 
-    //Здесь сделаем обработку "админских" команд
-        //На данный момент список возможных пунктов меню следующий (! требует обсуждения и доработки! ):
-        // /view_questions - посмотреть вопросы пользователей
-        // /add_pet_to_user - добавить питомца к профилю пользователя
-        // /view_actual_reports - посмотреть свежие/актуальные отчеты
-        // /view_problems_with_reports - посмотреть проблемы с отчетами
-
-        //Обработаем команду /view_questions
-        if (inputText.equals("/view_questions")){
-            sendMessage(chatId, questionsHandler.getAllActiveQuestions());
-        }
-        //Обработка команды /add_pet_to_user осуществляется штатно через CommandSelector,
-        //т.к. выводится на экран инструкция для правильного добавления питомца к профилю пользователя.
-        //Значит обработаем введенную строку
-        if (inputText.startsWith("питомец:")){
-            if (addPetToUser(update)){
-                sendMessage(chatId, "Привязка питомца к пользователю успешна!");
-            } else{
-                sendMessage(chatId, "Привязка питомца к пользователю не удалась...\n" +
-                        "Попробуйте еще раз ввести данные, подсказка - по команде /add_pet_to_user");
-            }
-        }
-
-
-
-        //Надо прописать обработку полученной фотографии питомца, которая является частью отчета
-
-        //Если текст начинается с "отчет:", то значит пользователь добавляет отчетные данные
-        //Надо продумать как маркировать команды, которые связаны с отправкой отчета !!!!
-
-    }
-
-    private boolean addPetToUser(Update update){
-        //Получаем строку из сообщения
-        String text = update.getMessage().getText();
-        //Уберем из строки уже ненужные символы
-        text = text.replaceAll("питомец:", "");
-        //Теперь делим полученную строку на отдельные слова
-        String[] words = text.split(";");
-        //Если после деления на слова получилось меньше 3 элементов, то во введенной строке чего-то не хватает,
-        //а значит придется ввести строку снова.
-        if (words.length != 3) {
-            return false;
-        }
-        //Теперь из массива получим chatId усыновителя, вид питомца и кличку питомца
-        String chatIdUser = words[0];
-        String typePet = words[1];
-        String namePet = words[2];
-        boolean petIsAdded = false;
-        //Найдем "усыновителя" под таким номером
-        if (testUsersRepository.findById(Long.valueOf(chatIdUser)).isPresent()) {
-            TestUserForMenu user = testUsersRepository.findById(Long.valueOf(chatIdUser)).get();
-            user.setHavePet(true);
-            user.setPetName(typePet + " " + namePet);
-            testUsersRepository.save(user);
-            petIsAdded = true;
-        }
-        if (petIsAdded) {
-            log.info("Привязка питомца к пользователю успешна!");
-        } else {
-            log.error("Привязка питомца к пользователю не удалась...");
-        }
-        return petIsAdded;
-    }
-
-    private void selectMenuForUser(Long chatId) {
-//Для удобства получим ранее зарегистрированного в БД пользователя
-        TestUserForMenu testUserForMenu = testUsersRepository.findById(chatId).get();
-        //Узнаем его внутренний статус и заполняем Меню под него
-        //Сгруппируем по приютам
-        if (testUserForMenu.getVisitedShelter().equals("/dog_shelter")) {
-            if (testUserForMenu.getInnerStatusUser() == InnerStatusUser.USER_WITH_PET) {
-                try {
-                    execute(new SetMyCommands(
-                            botMenuCreator.addCommandsForRegisteredUsersAfterAdoptDog(),
-                            new BotCommandScopeDefault(),
-                            null));
-                } catch (TelegramApiException e) {
-                    log.error("Ошибка формирования МЕНЮ бота: " + e.getMessage());
-                }
+        //В этой части - выбираем действие в зависимости от полученного update
+        if (update.hasMessage() && update.getMessage().hasText()) {
+            if (update.getMessage().getText() == null) {
+                sendMessage(chatId, "Пожалуйста, введите сообщение или команду\n" +
+                        " /start");
             } else {
-                try {
-                    execute(new SetMyCommands(
-                            botMenuCreator.addCommandsForDogShelterUsers(),
-                            new BotCommandScopeDefault(),
-                            null));
-                } catch (TelegramApiException e) {
-                    log.error("Ошибка формирования МЕНЮ бота: " + e.getMessage());
+                String inputText = update.getMessage().getText();
+                //Если введенный текст начинается с "/", то сразу отправляем на обработку
+                if (inputText.startsWith("/")) {
+                    String outputText = commandUtil.selectBotCommand(update);
+                    sendMessage(chatId, outputText);
+                }
+                //Если текст начинается с "рег:", то значит поступили регистрационные данные
+                if (inputText.startsWith("рег:")) {
+                    if (userUtil.registerUser(update)) {
+                        sendMessage(chatId, "Регистрация пользователя завершена успешно!");
+                    } else {
+                        sendMessage(chatId, "Регистрация не удалась...\n" +
+                                "\n" +
+                                "Попробуйте снова...\n" +
+                                "\n" +
+                                "Возможные причины:\n" +
+                                "- забыли написать имя, фамилию, номер телефона или электронную почту\n" +
+                                "Сообщение, содержащее регистрационные данные, должно выглядеть так:\n" +
+                                "рег: Иван; Иванов; +7(999) 000-00-00; почта@почта.com\n" +
+                                "- не выбран приют для питомцев - начните общение с ботом с команды\n" +
+                                "\n" +
+                                "/start");
+                    }
+                    //Обработка команды /add_pet_to_user осуществляется штатно через CommandSelector,
+                    //т.е. выводится на экран инструкция для правильного добавления питомца к профилю пользователя.
+                    //Значит обработаем введенную строку
+                    if (inputText.startsWith("питомец:")) {
+                        if (userUtil.addPetToUser(update)) {
+                            sendMessage(chatId, "Привязка питомца к пользователю успешна!");
+                        } else {
+                            sendMessage(chatId, "Привязка питомца к пользователю не удалась...\n" +
+                                    "Попробуйте еще раз ввести данные, подсказка - см. команду /add_pet_to_user");
+                        }
+                    }
+                    if (inputText.startsWith("вопрос:")) {
+                        if (questionsUtil.addQuestion(update)) {
+                            sendMessage(chatId, "Уважаемый Пользователь! Ваш вопрос сохранен и будет направлен волонтеру.");
+                        } else {
+                            sendMessage(chatId, "Уважаемый Пользователь! Ваш вопрос не сохранен, пожалуйста внимательнее перечитайте как надо записать вопрос.");
+                        }
+                    }
+                }
+            }
+            if (update.hasMessage() && update.getMessage().hasDocument()) {
+                if (addReport(update)) {
+                    sendMessage(chatId, "Отчет (в виде картинки с текстом) сохранен!");
+                } else {
+                    sendMessage(chatId, "Отчет не сохранен. Пожалуйста, добавьте описание состояния питомца!");
                 }
             }
         }
-        if (testUserForMenu.getVisitedShelter().equals("/cat_shelter")) {
-            if (testUserForMenu.getInnerStatusUser() == InnerStatusUser.USER_WITH_PET) {
-                try {
-                    execute(new SetMyCommands(
-                            botMenuCreator.addCommandsForRegisteredUsersAfterAdoptCat(),
-                            new BotCommandScopeDefault(),
-                            null));
-                } catch (TelegramApiException e) {
-                    log.error("Ошибка формирования МЕНЮ бота: " + e.getMessage());
-                }
-            } else {
-                try {
-                    execute(new SetMyCommands(
-                            botMenuCreator.addCommandsForCatShelterUsers(),
-                            new BotCommandScopeDefault(),
-                            null));
-                } catch (TelegramApiException e) {
-                    log.error("Ошибка формирования МЕНЮ бота: " + e.getMessage());
-                }
+    }
+
+    private boolean addReport(Update update) {
+        /*List<PhotoSize> photos = update.getMessage().getPhoto();
+        long chat_id = update.getMessage().getChatId();
+        String f_id = photos.stream()
+                .sorted(Comparator.comparing(PhotoSize::getFileSize).reversed())
+                .findFirst()
+                .orElse(null).getFileId();
+        int f_width = photos.stream()
+                .sorted(Comparator.comparing(PhotoSize::getFileSize).reversed())
+                .findFirst()
+                .orElse(null).getWidth();
+        int f_height = photos.stream()
+                .sorted(Comparator.comparing(PhotoSize::getFileSize).reversed())
+                .findFirst()
+                .orElse(null).getHeight();
+        String caption = "file_id: " + f_id + "\nwidth: " + Integer.toString(f_width) + "\nheight: " + Integer.toString(f_height);
+        SendPhoto msg = new SendPhoto()
+                .setChatId(chat_id)
+                .setPhoto(f_id)
+                .setCaption(caption);
+        try {
+            sendPhoto(msg); // Call method to send the message
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }*/
+
+        GetFile getFile = new GetFile(update.getMessage().getDocument().getFileId());
+        boolean reportIsSaved = false;
+        try {
+            Report report = new Report();
+            File file = execute(getFile);
+            //String fileId = file.getFileId();
+            String url = file.getFileUrl(botConfig.getToken());
+            String userName = update.getMessage().getFrom().getFirstName();
+            String userId = update.getMessage().getFrom().getId().toString();
+            String description = update.getMessage().getCaption();
+            if (description.isEmpty()) {
+                return reportIsSaved;
             }
+            report.setUserName(userName);
+            report.setFileUrl(url);
+            report.setUserId(userId);
+            report.setDescriptionReport(description);
+            reportsRepository.save(report);
+            reportIsSaved = true;
+        } catch (TelegramApiException e) {
+            log.error("Ошибка сохранения файла отчета: " + e.getMessage());
         }
+        return reportIsSaved;
     }
 
-    private void silentRegistration(Long chatId, String nameInChat) {
-        TestUserForMenu testUserForMenu = new TestUserForMenu();
-        testUserForMenu.setChatId(chatId);
-        testUserForMenu.setNameInChat(nameInChat);
-        testUserForMenu.setInnerStatusUser(InnerStatusUser.NOT_REGISTERED_USER);
-        testUsersRepository.save(testUserForMenu);
-        log.info("Новый пользователь " + nameInChat + " записан в БД");
-    }
-
-    /**
-     * Метод для регистрации пользователей, которые планируют взять питомца из приюта.
-     * По итогам работы метода может быть создан один из двух зарегистрированных пользователей
-     * (для каждого приюта) или не создан, если введены некорректные регистрационные данные.
-     *
-     * @author Мухаметзянов Эдуард
-     */
-    private boolean registerUser(Update update) {
-        //Соберем значения полей, чтобы потом их присвоить
-        Long newChatId = update.getMessage().getChatId();
-        String newNameInChat = update.getMessage().getChat().getFirstName();
-        String selectedShelter = testUsersRepository.findById(newChatId).get().getVisitedShelter();
-        //Получаем строку из сообщения
-        String text = update.getMessage().getText();
-        //Уберем из строки уже ненужные символы
-        text = text.replaceAll("рег:", "");
-        //Удалим пробелы внутри строки
-        text = text.replaceAll(" ", "");
-        //Теперь делим полученную строку на отдельные слова
-        String[] words = text.split(";");
-        //Если после деления на слова получилось меньше 4 элементов, то во введенной строке чего-то не хватает,
-        //а значит и данные для регистрации введены неправильно
-        if (words.length != 4) {
-            return false;
-        }
-        //Теперь из массива получим имя, фамилию, номер телефона и почту
-        String newFirstName = words[0];
-        String newLastName = words[1];
-        String newPhoneNumber = words[2];
-        String newEmail = words[3];
-
-        //Значения всех будущих полей получены, создаем экземпляр класса и заполняем его поля.
-        TestUserForMenu newUser = new TestUserForMenu();
-        newUser.setChatId(newChatId);
-        newUser.setNameInChat(newNameInChat);
-        newUser.setFirstName(newFirstName);
-        newUser.setLastName(newLastName);
-        newUser.setPhoneNumber(newPhoneNumber);
-        newUser.setE_mail(newEmail);
-        newUser.setVisitedShelter(selectedShelter);
-        newUser.setInnerStatusUser(InnerStatusUser.REGISTERED_USER);
-        //Сохраняем экземпляр в БД
-        testUsersRepository.save(newUser);
-        //Возвращаем логическое значение
-        //Если в БД есть пользователь с таким chatId, то вернется true
-        //Если нет - вернется false
-        boolean userIsCreated = testUsersRepository.existsById(newChatId);
-        if (userIsCreated) {
-            log.info("Регистрация завершена успешно!");
-        } else {
-            log.error("Регистрация не удалась...");
-        }
-        return userIsCreated;
-    }
 
     /**
      * Метод для отправки сообщений.
@@ -329,3 +246,126 @@ public class TelegramBot extends TelegramLongPollingBot {
         return botConfig.getToken();
     }
 }
+
+
+       /* if (update.getMessage().hasDocument()){
+            String doc_id = update.getMessage().getDocument().getFileId();
+            String doc_name = update.getMessage().getDocument().getFileName();
+            String doc_mime = update.getMessage().getDocument().getMimeType();
+            Long doc_size = update.getMessage().getDocument().getFileSize();
+            String getID = String.valueOf(update.getMessage().getFrom().getId());
+
+            Document document = new Document();
+            document.setMimeType(doc_mime);
+            document.setFileName(doc_name);
+            document.setFileSize(doc_size);
+            document.setFileId(doc_id);
+
+            GetFile getFile = new GetFile();
+            getFile.setFileId(document.getFileId());
+            try {
+                File file = execute(getFile);
+                downloadFile(file, new java.io.File(".pictures/"+getID+"_"+doc_name));
+
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+        }*/
+
+        /*if (update.hasMessage() && update.getMessage().hasPhoto()) {
+
+            // Message contains photo
+            // Set variables
+            long chat_id = update.getMessage().getChatId();
+
+            // Array with photo objects with different sizes
+            // We will get the biggest photo from that array
+            List<PhotoSize> photos = update.getMessage().getPhoto();
+            // Know file_id
+            String f_id = photos.stream()
+                    .sorted(Comparator.comparing(PhotoSize::getFileSize).reversed())
+                    .findFirst()
+                    .orElse(null).getFileId();
+            // Know photo width
+            int f_width = photos.stream()
+                    .sorted(Comparator.comparing(PhotoSize::getFileSize).reversed())
+                    .findFirst()
+                    .orElse(null).getWidth();
+            // Know photo height
+            int f_height = photos.stream()
+                    .sorted(Comparator.comparing(PhotoSize::getFileSize).reversed())
+                    .findFirst()
+                    .orElse(null).getHeight();
+            // Set photo caption
+            String caption = "file_id: " + f_id + "\nwidth: " + f_width + "\nheight: " + f_height;
+            System.out.println("------------------------------------------------------");
+            System.out.println(caption);
+            System.out.println("------------------------------------------------------");
+            SendPhoto msg = new SendPhoto();
+            msg.setChatId(chat_id);
+            //msg.setPhoto(f_id);
+            msg.setCaption(caption);
+            try {
+                execute(msg);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+            sendMessage(chat_id, String.valueOf(msg));
+                //sendPhoto(msg); // Call method to send the photo with caption
+
+        }*/
+
+//Надо прописать обработку полученной фотографии питомца, которая является частью отчета
+
+//Если текст начинается с "отчет:", то значит пользователь добавляет отчетные данные
+//Надо продумать как маркировать команды, которые связаны с отправкой отчета !!!!
+
+
+    /*public void uploadFile(String file_name, String file_id) throws IOException {
+        String token = "6105284745:AAH3PI1oHtKI9MoEJFgmbJpaTH1xYg-JjZI";
+        URL url = new URL("https://api.telegram.org/bot"+token+"/getFile?file_id="+file_id);
+        BufferedReader in = new BufferedReader(new InputStreamReader( url.openStream()));
+        String res = in.readLine();
+        JSONObject jresult = new JSONObject(res);
+        JSONObject path = jresult.getJSONObject("result");
+        String file_path = path.getString("file_path");
+        URL downoload = new URL("https://api.telegram.org/file/bot" + token + "/" + file_path);
+        FileOutputStream fos = new FileOutputStream(upPath + file_name);
+        System.out.println("Start upload");
+        ReadableByteChannel rbc = Channels.newChannel(downoload.openStream());
+        fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+        fos.close();
+        rbc.close();
+        uploadFlag = 0;
+        System.out.println("Uploaded!");
+    }*/
+
+   /* private SendMessage addButtonsInMenu(Long chatId){
+        SendMessage message = new SendMessage(); // Create a message object
+        message.setChatId(chatId);
+        message.setText("Ваш выбор сохранен");
+        // Create ReplyKeyboardMarkup object
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        // Create the keyboard (list of keyboard rows)
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        // Create a keyboard row
+        KeyboardRow firstPositiveAnswers = new KeyboardRow();
+        // Set each button, you can also use KeyboardButton objects if you need something else than text
+        firstPositiveAnswers.add("Питомец чувствует себя хорошо,\n" +
+                "активно передвигается и исследует территорию");
+        // Add the first row to the keyboard
+        keyboard.add(firstPositiveAnswers);
+        // Create another keyboard row
+        KeyboardRow firstNegativeAnswers = new KeyboardRow();
+        // Set each button for the second line
+        firstNegativeAnswers.add("Питомец чувствует не очень хорошо");
+        //negativeAnswers.add("Row 2 Button 2");
+        //negativeAnswers.add("Row 2 Button 3");
+        // Add the second row to the keyboard
+        keyboard.add(firstNegativeAnswers);
+        // Set the keyboard to the markup
+        keyboardMarkup.setKeyboard(keyboard);
+        // Add it to the message
+        message.setReplyMarkup(keyboardMarkup);
+        return message;
+    }*/
