@@ -1,14 +1,13 @@
 package skypro.learn.tg_botfromvideo.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import skypro.learn.tg_botfromvideo.repository.UsersRepository;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
+
 
 @Entity(name = "reportsTable")
 @Data
@@ -30,6 +29,21 @@ public class Report {
     //сам отчет
 
     private String descriptionReport;
+
+    private LocalDate dateReport;
+
+    @Override
+    public String toString() {
+        return "Отчет пользователя -  " + userName + ", от " + dateReport + ":\n" +
+               "Описание состояния питомца - " + descriptionReport + "\n"+
+               "Посмотреть весь отчет - " + fileUrl + "\n";
+    }
+
+    //Выключил, так и не разобрался как это работает...
+    //@ManyToOne(optional = false)
+    //@JoinColumn (name="author_report_id")
+    //private User users;
+
 }
 
    /* @Id

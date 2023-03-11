@@ -7,6 +7,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import skypro.learn.tg_botfromvideo.model.QuestionFromUser;
 import skypro.learn.tg_botfromvideo.repository.QuestionsRepository;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -28,6 +29,9 @@ public class QuestionsUtil {
                 resultListForView.append(question);
             }
         }
+        if (resultListForView.isEmpty()){
+            resultListForView.append("Список вопросов пуст");
+        }
         return resultListForView.toString();
     }
 
@@ -41,7 +45,7 @@ public class QuestionsUtil {
         question.setChatId(update.getMessage().getChatId());
         question.setQuestioner(update.getMessage().getChat().getFirstName());
         question.setQuestion(text);
-        question.setQuestionDate(new Timestamp(System.currentTimeMillis()));
+        question.setQuestionDate(LocalDate.now());
         questionsRepository.save(question);
         Long idSavedQuestion = question.getId();
         if (questionsRepository.existsById(idSavedQuestion)){

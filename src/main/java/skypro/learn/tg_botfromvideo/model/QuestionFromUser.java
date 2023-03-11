@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 @Entity(name = "questionFromUsers")
 @Data
@@ -22,7 +23,7 @@ public class QuestionFromUser {
     //поле для хранения имени пользователя, от которого поступил вопрос
     private String questioner;
 
-    private Timestamp questionDate;
+    private LocalDate questionDate;
 
     private String question;
 
@@ -33,7 +34,9 @@ public class QuestionFromUser {
 
     @Override
     public String toString() {
-        return questionDate + " - " + questioner + " - " + question +"\n";
+        return "Дата вопроса: " + questionDate + "\n" +
+                "Автор вопроса: " + questioner + "\n" +
+                "Вопрос: " + question +"\n";
     }
 }
 

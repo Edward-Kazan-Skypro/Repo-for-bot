@@ -1,8 +1,13 @@
 package skypro.learn.tg_botfromvideo.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.Collection;
 
 @Entity(name = "users")
 @Data
@@ -37,6 +42,11 @@ public class User {
     //Вряд ли в приюте будет несколько животных с одной и той же кличкой
     private String petName;
 
+    private LocalDate dateAdoptPet;
+
     private InnerStatusUser innerStatusUser;
 
+    //Выключил, так и не разобрался как это работает...
+    //@OneToMany (fetch = FetchType.LAZY, mappedBy = "users")
+    //private Collection<Report> reports;
 }

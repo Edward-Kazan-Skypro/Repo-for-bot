@@ -18,6 +18,8 @@ public class CommandUtil {
 
     final private UserUtil userUtil;
 
+    final private ReportUtil reportUtil;
+
     final private UsersRepository usersRepository;
 
     final private BotMenuSelector botMenuSelector;
@@ -25,11 +27,12 @@ public class CommandUtil {
     public CommandUtil(QuestionsUtil questionsUtil,
                        AdminsUtil adminsUtil,
                        UserUtil userUtil,
-                       UsersRepository usersRepository,
+                       ReportUtil reportUtil, UsersRepository usersRepository,
                        BotMenuSelector botMenuSelector) {
         this.questionsUtil = questionsUtil;
         this.adminsUtil = adminsUtil;
         this.userUtil = userUtil;
+        this.reportUtil = reportUtil;
         this.usersRepository = usersRepository;
         this.botMenuSelector = botMenuSelector;
     }
@@ -49,33 +52,37 @@ public class CommandUtil {
         //Отдельная обработка кодового слова для входа для администратора
         if (inputText.equals("/кодовое_слово")){
             adminsUtil.addAdmin(update);
-            //Если пользователь чата стал админом, то и Меню ему надо обновит
-            return "Добро пожаловать, Администратор!";
+            return readTextFromFile("/admins_command");
         }
 
         //Здесь сделаем обработку "админских" команд
-        //На данный момент список возможных пунктов меню следующий (! требует обсуждения и доработки! ):
+        //На данный момент список возможных пунктов меню следующий:
         // /view_questions - посмотреть вопросы пользователей
         // /add_pet_to_user - добавить питомца к профилю пользователя
-        // !!!!!  эти команды пока не обработаны, и не ясно будут ли они в итоге !!!!
         // /view_actual_reports - посмотреть свежие/актуальные отчеты
-        // /view_problems_with_reports - посмотреть проблемы с отчетами
-
-        //Отдельная обработка команды /view_questions - просмотр всех активных (актуальных) вопросов
+        // /view_all_reports - посмотреть все отчеты
+        //Обработка команды /view_questions - просмотр всех активных (актуальных) вопросов
         if (inputText.equals("/view_questions")){
             return questionsUtil.getAllActiveQuestions();
         }
+        //Обработка команды /view_actual_reports - просмотр текущих отчетов
+        if (inputText.equals("/view_actual_reports")){
+            return reportUtil.viewCurrentReports();
+        }
+
+        //Обработка команды /view_all_reports - посмотреть все отчеты
+        if (inputText.equals("/view_all_reports")){
+            return reportUtil.viewAllReports();
+        }
+
 
         //Когда пользователь выбирает приют, то сохраняем в БД под его chatId этот выбор
         if (inputText.equals("/dog_shelter") || inputText.equals("/cat_shelter")){
             userUtil.addShelterToUser(update);
-            //Если пользователь выбрал тип приюта, то и Меню бота надо обновить
-
         }
 
         //Обычная обработка команд
         return readTextFromFile(inputText);
-
     }
 
     /**

@@ -3,7 +3,6 @@ package skypro.learn.tg_botfromvideo.bot.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
-import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import skypro.learn.tg_botfromvideo.model.Admin;
 import skypro.learn.tg_botfromvideo.model.InnerStatusUser;
@@ -17,14 +16,14 @@ public class BotMenuSelector {
 
     final private UsersRepository usersRepository;
     final private AdminRepository adminRepository;
-    final private BotMenuCreator botMenuCreator;
+    final private AddCommandsToBotMenu addCommandsToBotMenu;
 
     public BotMenuSelector(UsersRepository usersRepository,
                            AdminRepository adminRepository,
-                           BotMenuCreator botMenuCreator) {
+                           AddCommandsToBotMenu addCommandsToBotMenu) {
         this.usersRepository = usersRepository;
         this.adminRepository = adminRepository;
-        this.botMenuCreator = botMenuCreator;
+        this.addCommandsToBotMenu = addCommandsToBotMenu;
     }
 
     public SetMyCommands selectMenuForUser(Long chatId) {
@@ -40,12 +39,12 @@ public class BotMenuSelector {
         if (user.getVisitedShelter().equals("/dog_shelter")) {
             if (user.getInnerStatusUser() == InnerStatusUser.USER_WITH_PET) {
                 return new SetMyCommands(
-                        botMenuCreator.addCommandsForRegisteredUsersAfterAdoptDog(),
+                        addCommandsToBotMenu.addCommandsForRegisteredUsersAfterAdoptDog(),
                         new BotCommandScopeDefault(),
                         null);
             } else {
                 return new SetMyCommands(
-                        botMenuCreator.addCommandsForDogShelterUsers(),
+                        addCommandsToBotMenu.addCommandsForDogShelterUsers(),
                         new BotCommandScopeDefault(),
                         null);
             }
@@ -53,19 +52,19 @@ public class BotMenuSelector {
         if (user.getVisitedShelter().equals("/cat_shelter")) {
             if (user.getInnerStatusUser() == InnerStatusUser.USER_WITH_PET) {
                 return new SetMyCommands(
-                        botMenuCreator.addCommandsForRegisteredUsersAfterAdoptCat(),
+                        addCommandsToBotMenu.addCommandsForRegisteredUsersAfterAdoptCat(),
                         new BotCommandScopeDefault(),
                         null);
             } else {
                 return new SetMyCommands(
-                        botMenuCreator.addCommandsForCatShelterUsers(),
+                        addCommandsToBotMenu.addCommandsForCatShelterUsers(),
                         new BotCommandScopeDefault(),
                         null);
 
             }
         } 
         return new SetMyCommands(
-                    botMenuCreator.addCommandsForNewUser(),
+                    addCommandsToBotMenu.addCommandsForNewUser(),
                     new BotCommandScopeDefault(),
                     null);
     }
@@ -78,7 +77,7 @@ public class BotMenuSelector {
         }
         if (admin != null) {
             setMyCommands = new SetMyCommands(
-                    botMenuCreator.addCommandsForAdmin(),
+                    addCommandsToBotMenu.addCommandsForAdmin(),
                     new BotCommandScopeDefault(),
                     null);
         }
