@@ -1,4 +1,4 @@
-package skypro.learn.tg_botfromvideo.model;
+package skypro.learn.tg_bot.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -6,7 +6,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.sql.Timestamp;
+
 import java.time.LocalDate;
 
 @Entity(name = "questionFromUsers")

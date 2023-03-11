@@ -1,4 +1,4 @@
-package skypro.learn.tg_botfromvideo.model;
+package skypro.learn.tg_bot.model;
 
 public enum InnerStatusUser {
     NEW_VISITOR("посетитель, который не выбрал тип приюта"),

@@ -1,15 +1,20 @@
-package skypro.learn.tg_botfromvideo.bot.service;
+package skypro.learn.tg_bot.bot.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
-import skypro.learn.tg_botfromvideo.model.Admin;
-import skypro.learn.tg_botfromvideo.model.InnerStatusUser;
-import skypro.learn.tg_botfromvideo.model.User;
-import skypro.learn.tg_botfromvideo.repository.AdminRepository;
-import skypro.learn.tg_botfromvideo.repository.UsersRepository;
+import skypro.learn.tg_bot.model.Admin;
+import skypro.learn.tg_bot.model.InnerStatusUser;
+import skypro.learn.tg_bot.model.User;
+import skypro.learn.tg_bot.repository.AdminRepository;
+import skypro.learn.tg_bot.repository.UsersRepository;
 
+
+/**
+ * Класс для определения - какие команды Меню будут отображаться пользователю.
+ * В текущей версии приложения не реализовано ввиду нестабильной работы.
+ */
 @Component
 @Slf4j
 public class BotMenuSelector {

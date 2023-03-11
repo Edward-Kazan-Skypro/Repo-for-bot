@@ -1,4 +1,4 @@
-package skypro.learn.tg_botfromvideo.bot.config;
+package skypro.learn.tg_bot.bot.config;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;

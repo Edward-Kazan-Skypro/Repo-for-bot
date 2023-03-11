@@ -1,13 +1,10 @@
-package skypro.learn.tg_botfromvideo.model;
+package skypro.learn.tg_bot.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.util.Collection;
 
 @Entity(name = "users")
 @Data

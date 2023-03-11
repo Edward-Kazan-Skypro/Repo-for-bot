@@ -1,4 +1,4 @@
-package skypro.learn.tg_botfromvideo.bot;
+package skypro.learn.tg_bot.bot;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -10,28 +10,22 @@ import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import skypro.learn.tg_botfromvideo.bot.service.*;
-import skypro.learn.tg_botfromvideo.bot.config.BotConfig;
-import skypro.learn.tg_botfromvideo.model.Report;
-import skypro.learn.tg_botfromvideo.repository.ReportsRepository;
-import skypro.learn.tg_botfromvideo.repository.UsersRepository;
-
+import skypro.learn.tg_bot.bot.service.*;
+import skypro.learn.tg_bot.bot.config.BotConfig;
+import skypro.learn.tg_bot.model.Report;
+import skypro.learn.tg_bot.repository.ReportsRepository;
+import skypro.learn.tg_bot.repository.UsersRepository;
 import java.time.LocalDate;
-
 
 @SuppressWarnings("deprecation")
 @Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
     final private BotConfig botConfig;
-    final private AddCommandsToBotMenu addCommandsToBotMenu;
     final private CommandUtil commandUtil;
     final private UserUtil userUtil;
-    final private ReportUtil reportUtil;
     final private QuestionsUtil questionsUtil;
     final private UsersRepository usersRepository;
-
-
     final private ReportsRepository reportsRepository;
 
     public TelegramBot(BotConfig botConfig,
@@ -43,10 +37,8 @@ public class TelegramBot extends TelegramLongPollingBot {
                        UsersRepository usersRepository,
                        ReportsRepository reportsRepository) {
         this.botConfig = botConfig;
-        this.addCommandsToBotMenu = addCommandsToBotMenu;
         this.commandUtil = commandUtil;
         this.userUtil = userUtil;
-        this.reportUtil = reportUtil;
         this.questionsUtil = questionsUtil;
         this.usersRepository = usersRepository;
         this.reportsRepository = reportsRepository;
@@ -61,6 +53,11 @@ public class TelegramBot extends TelegramLongPollingBot {
             log.error("Ошибка формирования МЕНЮ бота: " + e.getMessage());
         }
     }
+
+    /**
+     * Метод для обработки сообщений.
+     * @param update
+     */
 
     @Override
     public void onUpdateReceived(Update update) {
@@ -135,7 +132,6 @@ public class TelegramBot extends TelegramLongPollingBot {
                             "Попробуйте еще раз ввести данные, подсказка - см. команду /add_pet_to_user");
                 }
             }
-
             subText = inputText.substring(0, 7);
             if (subText.equals("вопрос:")) {
                 if (questionsUtil.addQuestion(update)) {
@@ -144,7 +140,6 @@ public class TelegramBot extends TelegramLongPollingBot {
                     sendMessage(chatId, "Уважаемый Пользователь! Ваш вопрос не сохранен, пожалуйста внимательнее перечитайте как надо записать вопрос.");
                 }
             }
-
         }
         if (update.hasMessage() && update.getMessage().hasDocument()) {
             if (saveReport(update)) {
@@ -160,39 +155,12 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     /**
-     * Метод сохранения документа - отчета пользователя о состоянии питомца.
-     *
+     * Метод сохранения документа - отчета пользователя о состоянии питомца.          *
      * @param update
      * @return
      */
 
     private boolean saveReport(Update update) {
-        //Закомментированный код - попытка обработать присланное боту фото.
-        /*List<PhotoSize> photos = update.getMessage().getPhoto();
-        long chat_id = update.getMessage().getChatId();
-        String f_id = photos.stream()
-                .sorted(Comparator.comparing(PhotoSize::getFileSize).reversed())
-                .findFirst()
-                .orElse(null).getFileId();
-        int f_width = photos.stream()
-                .sorted(Comparator.comparing(PhotoSize::getFileSize).reversed())
-                .findFirst()
-                .orElse(null).getWidth();
-        int f_height = photos.stream()
-                .sorted(Comparator.comparing(PhotoSize::getFileSize).reversed())
-                .findFirst()
-                .orElse(null).getHeight();
-        String caption = "file_id: " + f_id + "\nwidth: " + Integer.toString(f_width) + "\nheight: " + Integer.toString(f_height);
-        SendPhoto msg = new SendPhoto()
-                .setChatId(chat_id)
-                .setPhoto(f_id)
-                .setCaption(caption);
-        try {
-            sendPhoto(msg); // Call method to send the message
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }*/
-
         GetFile getFile = new GetFile(update.getMessage().getDocument().getFileId());
         boolean reportIsSaved = false;
         try {
