@@ -1,22 +1,21 @@
-package skypro.learn.tg_botfromvideo.model;
+package skypro.learn.tg_bot.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.glassfish.grizzly.http.util.TimeStamp;
 
 import java.sql.Timestamp;
 
-@Entity(name = "usersDataTable")
+@Entity(name = "admins")
 @Data
 @NoArgsConstructor
-public class User {
-
+public class Admin {
     @Id
     private Long chatId;
 
-    private String name;
+    private String nameInChat;
 
-    private Timestamp registeredAt;
+    private Timestamp loginDate;
+
 }

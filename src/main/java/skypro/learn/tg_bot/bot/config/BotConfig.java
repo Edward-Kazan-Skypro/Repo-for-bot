@@ -1,4 +1,4 @@
-package skypro.learn.tg_botfromvideo.config;
+package skypro.learn.tg_bot.bot.config;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,8 +10,7 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource("application.properties")
 public class BotConfig {
         @Value("${bot.name}")
-        String botName;
-
+        private String botName;
         @Value("${bot.token}")
-        String token;
+        private String token;
 }

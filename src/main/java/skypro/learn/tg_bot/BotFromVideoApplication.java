@@ -1,4 +1,4 @@
-package skypro.learn.tg_botfromvideo;
+package skypro.learn.tg_bot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,5 +9,4 @@ public class BotFromVideoApplication {
     public static void main(String[] args) {
         SpringApplication.run(BotFromVideoApplication.class, args);
     }
-
 }
