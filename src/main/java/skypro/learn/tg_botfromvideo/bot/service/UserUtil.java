@@ -7,6 +7,9 @@ import skypro.learn.tg_botfromvideo.model.InnerStatusUser;
 import skypro.learn.tg_botfromvideo.model.User;
 import skypro.learn.tg_botfromvideo.repository.UsersRepository;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
+
 @Slf4j
 @Component
 public class UserUtil {
@@ -59,6 +62,7 @@ public class UserUtil {
         newUser.setPhoneNumber(newPhoneNumber);
         newUser.setE_mail(newEmail);
         newUser.setVisitedShelter(selectedShelter);
+        newUser.setRegistered(true);
         newUser.setInnerStatusUser(InnerStatusUser.REGISTERED_USER);
         //Сохраняем экземпляр в БД
         usersRepository.save(newUser);
@@ -74,14 +78,28 @@ public class UserUtil {
         return userIsCreated;
     }
 
+    /**
+     * Метод для первичной регистрации пользователя.
+     * Вызывается при отправке какого-либо сообщения Боту.
+     * @param chatId
+     * @param nameInChat
+     */
     public void silentRegistrationUser(Long chatId, String nameInChat) {
         User user = new User();
         user.setChatId(chatId);
         user.setNameInChat(nameInChat);
+        user.setRegistered(false);
         user.setInnerStatusUser(InnerStatusUser.NOT_REGISTERED_USER);
         usersRepository.save(user);
         log.info("Новый пользователь " + nameInChat + " записан в БД");
     }
+
+    /**
+     * Метод добавления в профиль пользователя информации о взятом из приюта питомце.
+     * Добавляется вид и кличка питомца.
+     * @param update
+     * @return
+     */
 
     public boolean addPetToUser(Update update) {
         //Получаем строку из сообщения
@@ -105,6 +123,7 @@ public class UserUtil {
             User user = usersRepository.findById(Long.valueOf(chatIdUser)).get();
             user.setHavePet(true);
             user.setPetName(typePet + " " + namePet);
+            user.setDateAdoptPet(LocalDate.now());
             user.setInnerStatusUser(InnerStatusUser.USER_WITH_PET);
             usersRepository.save(user);
             petIsAdded = true;
@@ -116,6 +135,11 @@ public class UserUtil {
         }
         return petIsAdded;
     }
+
+    /**
+     * Метод добавления в профиль пользователя информации о выбранном приюте.
+     * @param update
+     */
 
     public void addShelterToUser(Update update) {
         //Когда пользователь выбирает приют, то сохраняем в БД под его chatId этот выбор
