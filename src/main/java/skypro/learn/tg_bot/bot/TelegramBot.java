@@ -42,7 +42,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         this.questionsUtil = questionsUtil;
         this.usersRepository = usersRepository;
         this.reportsRepository = reportsRepository;
-
         //Здесь выбираем список команд для нового пользователя
         try {
             execute(new SetMyCommands(
@@ -155,11 +154,13 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     /**
-     * Метод сохранения документа - отчета пользователя о состоянии питомца.          *
+     * Метод сохранения документа - отчета пользователя о состоянии питомца.
      * @param update
      * @return
      */
 
+    //Этот метод пришлось оставить в этом классе, хотя лучше его перенести в ReportUtil
+    //Причина - File file = execute(getFile); - команда execute в других классах не распознается.
     private boolean saveReport(Update update) {
         GetFile getFile = new GetFile(update.getMessage().getDocument().getFileId());
         boolean reportIsSaved = false;
