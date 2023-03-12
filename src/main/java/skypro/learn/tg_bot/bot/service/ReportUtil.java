@@ -51,9 +51,3 @@ public class ReportUtil {
         return resultListForView.toString();
     }
 }
-
-
-
-
-
-

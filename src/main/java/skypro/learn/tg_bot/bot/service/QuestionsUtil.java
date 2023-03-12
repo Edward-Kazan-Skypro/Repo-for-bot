@@ -43,6 +43,7 @@ public class QuestionsUtil {
         boolean questionIsAdded = false;
         //Получаем строку из сообщения
         String text = update.getMessage().getText();
+        Long questionerChatId = update.getMessage().getChatId();
         //Уберем из строки уже ненужные символы
         text = text.replaceAll("вопрос:", "");
         QuestionFromUser question = new QuestionFromUser();
@@ -50,6 +51,7 @@ public class QuestionsUtil {
         question.setQuestioner(update.getMessage().getChat().getFirstName());
         question.setQuestion(text);
         question.setQuestionDate(LocalDate.now());
+        question.setQuestionerChatId(questionerChatId);
         questionsRepository.save(question);
         Long idSavedQuestion = question.getId();
         if (questionsRepository.existsById(idSavedQuestion)){
