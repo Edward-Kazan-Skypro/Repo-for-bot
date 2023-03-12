@@ -1,15 +1,18 @@
-package skypro.learn.tg_botfromvideo.bot.service;
+package skypro.learn.tg_bot.bot.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import skypro.learn.tg_botfromvideo.model.InnerStatusUser;
-import skypro.learn.tg_botfromvideo.model.User;
-import skypro.learn.tg_botfromvideo.repository.UsersRepository;
-
-import java.sql.Timestamp;
+import skypro.learn.tg_bot.model.InnerStatusUser;
+import skypro.learn.tg_bot.model.User;
+import skypro.learn.tg_bot.repository.UsersRepository;
 import java.time.LocalDate;
 
+
+/**
+ * Класс для обработки информации о пользователях
+ * - регистрация пользователя, добавление различной информации в профиль пользователя.
+ */
 @Slf4j
 @Component
 public class UserUtil {

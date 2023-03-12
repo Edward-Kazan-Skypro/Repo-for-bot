@@ -1,9 +1,9 @@
-package skypro.learn.tg_botfromvideo.bot.service;
+package skypro.learn.tg_bot.bot.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import skypro.learn.tg_botfromvideo.repository.UsersRepository;
+import skypro.learn.tg_bot.repository.UsersRepository;
 import java.io.*;
 
 @Slf4j
@@ -39,8 +39,7 @@ public class CommandUtil {
 
     /**
      * Метод для обработки сообщения от пользователя телеграмм-бота.
-     * В качестве аргумента принимает текст.
-     *
+     * В качестве аргумента принимает текст.     *
      * @param update
      * @return
      */
@@ -75,7 +74,6 @@ public class CommandUtil {
             return reportUtil.viewAllReports();
         }
 
-
         //Когда пользователь выбирает приют, то сохраняем в БД под его chatId этот выбор
         if (inputText.equals("/dog_shelter") || inputText.equals("/cat_shelter")){
             userUtil.addShelterToUser(update);
@@ -102,7 +100,4 @@ public class CommandUtil {
         }
         return new String(content);
     }
-
-
-
 }

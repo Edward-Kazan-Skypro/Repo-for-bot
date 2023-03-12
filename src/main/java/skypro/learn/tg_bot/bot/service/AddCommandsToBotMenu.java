@@ -1,4 +1,4 @@
-package skypro.learn.tg_botfromvideo.bot.service;
+package skypro.learn.tg_bot.bot.service;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,7 +17,8 @@ public class AddCommandsToBotMenu {
     private List<BotCommand> listOfCommands;
 
     /**
-     * Метод добавляет пункты в Меню телеграмм-бота
+     * Метод добавляет пункты в Меню телеграмм-бота.
+     * В текущей версии приложения не реализовано.
      * @return список (List) команд
      */
 

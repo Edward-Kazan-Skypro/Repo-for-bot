@@ -1,4 +1,4 @@
-package skypro.learn.tg_botfromvideo.model;
+package skypro.learn.tg_bot.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

@@ -1,13 +1,16 @@
-package skypro.learn.tg_botfromvideo.bot.service;
+package skypro.learn.tg_bot.bot.service;
 
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import skypro.learn.tg_botfromvideo.model.Report;
-import skypro.learn.tg_botfromvideo.repository.ReportsRepository;
+import skypro.learn.tg_bot.model.Report;
+import skypro.learn.tg_bot.repository.ReportsRepository;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Класс для обработки отчетов пользователей
+ */
 
 @Slf4j
 @Component

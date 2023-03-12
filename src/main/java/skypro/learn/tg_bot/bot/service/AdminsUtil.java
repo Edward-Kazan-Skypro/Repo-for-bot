@@ -1,11 +1,11 @@
-package skypro.learn.tg_botfromvideo.bot.service;
+package skypro.learn.tg_bot.bot.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import skypro.learn.tg_botfromvideo.model.Admin;
-import skypro.learn.tg_botfromvideo.repository.AdminRepository;
-import skypro.learn.tg_botfromvideo.repository.UsersRepository;
+import skypro.learn.tg_bot.model.Admin;
+import skypro.learn.tg_bot.repository.AdminRepository;
+import skypro.learn.tg_bot.repository.UsersRepository;
 
 import java.sql.Timestamp;
 
